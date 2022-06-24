@@ -1,3 +1,3 @@
-module git_manager
+module git-manager
 
 go 1.18
