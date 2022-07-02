@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/csv"
 	"flag"
-	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -16,23 +17,26 @@ func main() {
 	config := flag.String("config", "~/.git-repositories-managing", "The data file containing all the Git repositories to manage.")
 	flag.Parse()
 
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:          false,
+		DisableTimestamp:       true,
+		DisableLevelTruncation: true,
+		PadLevelText:           true,
+	})
+
 	// Getting user home directory so we can find replace ~ as Go does not handle it.
 	usr, err := user.Current()
 	home := usr.HomeDir
 
-	// TODO better logging.
-	// TODO better error handling.
 	if err != nil {
-		fmt.Print(err)
-		return
+		log.Fatal(err)
 	}
 
 	// Read in the config.
 	file, err := os.Open(toPath(home, *config))
 
 	if err != nil {
-		fmt.Print(err)
-		return
+		log.Fatal(err)
 	}
 
 	defer file.Close()
@@ -42,8 +46,7 @@ func main() {
 	data, err := reader.ReadAll()
 
 	if err != nil {
-		fmt.Print(err)
-		return
+		log.Fatal(err)
 	}
 
 	// Used to wait upon all the Go routines for line of data.
@@ -64,7 +67,7 @@ func main() {
 					err := cmd.Run()
 
 					if err != nil {
-						fmt.Println(err)
+						log.Error(err)
 						c <- struct{}{}
 						return
 					}
@@ -73,12 +76,12 @@ func main() {
 					err = cmd.Run()
 
 					if err != nil {
-						fmt.Println(err)
+						log.Error(err)
 						c <- struct{}{}
 						return
 					}
 
-					fmt.Println("Cloned " + remote + " to " + local)
+					log.Info("Cloned " + remote + " to " + local)
 				}
 
 				c <- struct{}{}
