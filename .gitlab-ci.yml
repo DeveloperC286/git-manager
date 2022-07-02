@@ -10,92 +10,71 @@ stages:
   - release-binary-compiling
 
 
+services:
+  - docker:dind
+
+
 variables:
-  SEMANTIC_VERSIONING_REGEX: "[0-9][0-9]*[.][0-9][0-9]*[.][0-9][0-9]*"
-  RELEASE_CLI: "release-cli-linux-amd64"
-  GIT_CLIFF_VERSION: "0.6.0"
+  DOCKER_HOST: tcp://docker:2375
+
+
+image:
+  name: earthly/earthly
+  entrypoint: ["/bin/sh", "-c"]
 
 
 clean-git-history-checking:
   stage: clean-git-history-checking
-  image: rust
-  before_script:
-    - cargo install clean_git_history
   script:
-    # Check all the commits in the branch.
-    - /usr/local/cargo/bin/clean_git_history --from-reference "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+    - earthly --ci +clean-git-history-checking --from_reference "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 conventional-commits-linting:
   stage: conventional-commits-linting
-  image: rust
-  before_script:
-    - cargo install conventional_commits_linter
   script:
-    # Lint all the commits in the branch.
-    - /usr/local/cargo/bin/conventional_commits_linter --from-reference "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}" --allow-angular-type-only
+    - earthly --ci +conventional-commits-linting --from_reference "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 conventional-commits-next-version-checking:
   stage: conventional-commits-next-version-checking
-  image: rust
-  before_script:
-    - cargo install conventional_commits_next_version
   script:
-    # Get current version.
-    - current_version=$(cat "VERSION")
-    # Get latest tag.
-    - latest_tag=$(git tag --sort=-committerdate | head -1)
-    # Check current vs expected.
-    - /usr/local/cargo/bin/conventional_commits_next_version --calculation-mode "Batch" --from-reference "${latest_tag}" --from-version "${latest_tag}" --current-version "${current_version}"
+    - earthly --ci +conventional-commits-next-version-checking
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 formatting:
   stage: formatting
-  image: golang
   script:
-    - for i in $(du -a "./src/" | awk '{print $2}' | grep -i "[.]go$"); do
-    - test -z "$(gofmt -l "$i")" || ( echo "$i needs formatted." && exit 1 )
-    - done
+    - earthly --ci +check-formatting
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 linting:
   stage: linting
-  image: golangci/golangci-lint
-  before_script:
-    - go mod download
   script:
-    - golangci-lint run
+    - earthly --ci +linting
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 module-tidying:
   stage: module-tidying
-  image: golang
   script:
-    - cp "go.mod" "go.mod.copy"
-    - go mod tidy
-    - cmp "go.mod" "go.mod.copy" || ( echo "Modules need tidied." && exit 1 )
+    - earthly --ci +check-module-tidying
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
 
 compiling:
   stage: compiling
-  image: golang
-  before_script:
-    - go mod download
   script:
-    - go build -o main "./src/"
+    - earthly --ci +compiling-linux-amd64
   rules:
     - if: $CI_MERGE_REQUEST_ID
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -103,42 +82,16 @@ compiling:
 
 releasing:
   stage: releasing
-  image: rust
   script:
-    # Get current version.
-    - current_version=$(cat VERSION)
-    # If the tag already exist then exit.
-    - new_tag=${current_version}
-    - git tag -l | grep -q "^${new_tag}$" && exit 0
-    # Get latest tag.
-    - latest_tag=$(git tag --sort=-committerdate | head -1)
-    # Install release description generator.
-    - wget "https://github.com/orhun/git-cliff/releases/download/v${GIT_CLIFF_VERSION}/git-cliff-${GIT_CLIFF_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-    - tar xzvf "git-cliff-${GIT_CLIFF_VERSION}-x86_64-unknown-linux-musl.tar.gz"
-    # Generate the release description.
-    - release_description=$(./git-cliff-${GIT_CLIFF_VERSION}/git-cliff "${latest_tag}.." --tag "${new_tag}" --strip all)
-    # Install GitlabCI cli releasing tool.
-    - wget "https://release-cli-downloads.s3.amazonaws.com/latest/${RELEASE_CLI}"
-    - chmod 755 "${RELEASE_CLI}"
-    # Create the new release.
-    - ./${RELEASE_CLI} create
-      --name "${new_tag}"
-      --description "${release_description}"
-      --tag-name "${new_tag}"
-      --ref "${CI_COMMIT_SHA}"
-      --assets-link '{"name":"linux-amd64-binary.zip","url":"https://gitlab.com/DeveloperC/git-manager/-/jobs/artifacts/'${new_tag}'/download?job=release-binary-compiling-linux-amd64"}'
-      --assets-link '{"name":"darwin-amd64-binary.zip","url":"https://gitlab.com/DeveloperC/git-manager/-/jobs/artifacts/'${new_tag}'/download?job=release-binary-compiling-darwin-amd64"}'
+    - earthly --ci +releasing --server_url "${CI_SERVER_URL}" --job_token "${CI_JOB_TOKEN}" --project_id "${CI_PROJECT_ID}" --reference "${CI_COMMIT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
 release-binary-compiling-linux-amd64:
   stage: release-binary-compiling
-  image: golang
-  before_script:
-    - go mod download
   script:
-    - env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o git-manager "./src/"
+    - earthly --ci +compiling-linux-amd64
   artifacts:
     paths:
       - git-manager
@@ -148,12 +101,8 @@ release-binary-compiling-linux-amd64:
 
 release-binary-compiling-darwin-amd64:
   stage: release-binary-compiling
-  image: golang
-  before_script:
-    - go mod download
   script:
-    - env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o git-manager "./src/"
-    - strip git-manager
+    - earthly --ci +compiling-linux-amd64
   artifacts:
     paths:
       - git-manager
