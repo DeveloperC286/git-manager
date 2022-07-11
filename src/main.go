@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
 	"flag"
 	"os"
@@ -83,6 +84,64 @@ func main() {
 					}
 
 					log.Info("Cloned " + remote + " to " + local)
+				} else {
+					// Exists locally so just pull from origin/HEAD and rebase.
+					cmd := exec.Command("sh", "-c", "git branch -a | grep \"^  remotes/origin/HEAD -> origin/\" | cut -d \"/\" -f 4")
+					// Execute inside the local Git repo.
+					cmd.Dir = local
+					// Setup reading the command output
+					stdout := new(bytes.Buffer)
+					stderr := new(bytes.Buffer)
+					cmd.Stdout = stdout
+					cmd.Stderr = stderr
+
+					err = cmd.Run()
+
+					if err != nil {
+						log.WithError(err).Error(stderr.String())
+						statusChannel <- struct{}{}
+						return
+					}
+
+					head := strings.TrimSpace(stdout.String())
+
+					// Get the branch currently checked out.
+					cmd = exec.Command("git", "branch", "--show-current")
+					// Execute inside the local Git repo.
+					cmd.Dir = local
+					// Setup reading the command output
+					stdout = new(bytes.Buffer)
+					stderr = new(bytes.Buffer)
+					cmd.Stdout = stdout
+					cmd.Stderr = stderr
+
+					err = cmd.Run()
+
+					if err != nil {
+						log.WithError(err).Error(stderr.String())
+						statusChannel <- struct{}{}
+						return
+					}
+
+					current := strings.TrimSpace(stdout.String())
+
+					if head == current {
+						cmd = exec.Command("git", "pull", "--rebase", "--autostash")
+						// Execute inside the local Git repo.
+						cmd.Dir = local
+						// Setup reading the command output
+						stderr = new(bytes.Buffer)
+						cmd.Stderr = stderr
+
+						err = cmd.Run()
+
+						if err != nil {
+							log.WithError(err).Error(stderr.String())
+							statusChannel <- struct{}{}
+							return
+						}
+
+					}
 				}
 
 				statusChannel <- struct{}{}
