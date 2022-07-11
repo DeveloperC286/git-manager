@@ -43,6 +43,8 @@ func main() {
 
 	// Try to read the config as CSV data.
 	reader := csv.NewReader(file)
+	// Disable the checking of number of fields per record.
+	reader.FieldsPerRecord = -1
 	data, err := reader.ReadAll()
 
 	if err != nil {
@@ -52,15 +54,14 @@ func main() {
 	// Used to wait upon all the Go routines for line of data.
 	var channels []chan struct{}
 
-	for _, line := range data {
-		// TODO error handling if not remote,local format.
+	for lineNumber, line := range data {
 		if len(line) == 2 {
 			// Channel to return the Go routine for this line has finished.
-			c := make(chan struct{})
-			channels = append(channels, c)
+			statusChannel := make(chan struct{})
+			channels = append(channels, statusChannel)
 
 			// Go routine per line as the Git network operations are the bottleneck.
-			go func(remote string, local string, c chan struct{}) {
+			go func(remote string, local string, statusChannel chan struct{}) {
 				if !exists(local) {
 					// Does not exist locally so just clone from remote.
 					cmd := exec.Command("mkdir", "-p", local)
@@ -68,7 +69,7 @@ func main() {
 
 					if err != nil {
 						log.Error(err)
-						c <- struct{}{}
+						statusChannel <- struct{}{}
 						return
 					}
 
@@ -77,15 +78,17 @@ func main() {
 
 					if err != nil {
 						log.Error(err)
-						c <- struct{}{}
+						statusChannel <- struct{}{}
 						return
 					}
 
 					log.Info("Cloned " + remote + " to " + local)
 				}
 
-				c <- struct{}{}
-			}(line[0], toPath(home, line[1]), c)
+				statusChannel <- struct{}{}
+			}(line[0], toPath(home, line[1]), statusChannel)
+		} else {
+			log.Warnf("Do not know how to parse the line number %d with the content %s.", lineNumber+1, printArray(line))
 		}
 	}
 
@@ -106,4 +109,22 @@ func toPath(home string, path string) string {
 	}
 
 	return path
+}
+
+func printArray(array []string) string {
+	var buffer strings.Builder
+
+	buffer.WriteString("[")
+
+	for index, item := range array {
+		if index != 0 {
+			buffer.WriteString(", ")
+		}
+
+		buffer.WriteString("\"" + item + "\"")
+	}
+
+	buffer.WriteString("]")
+
+	return buffer.String()
 }
