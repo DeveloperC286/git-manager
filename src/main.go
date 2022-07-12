@@ -65,17 +65,7 @@ func main() {
 			go func(remote string, local string, statusChannel chan struct{}) {
 				if !exists(local) {
 					// Does not exist locally so just clone from remote.
-					cmd := exec.Command("mkdir", "-p", local)
-					err := cmd.Run()
-
-					if err != nil {
-						log.Error(err)
-						statusChannel <- struct{}{}
-						return
-					}
-
-					cmd = exec.Command("git", "clone", remote, local)
-					err = cmd.Run()
+					err := exec.Command("git", "clone", remote, local).Run()
 
 					if err != nil {
 						log.Error(err)
