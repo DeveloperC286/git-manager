@@ -87,7 +87,7 @@ func main() {
 					}).Info("Successfully cloned to local location from remote repository.")
 				} else {
 					// Exists locally so just pull from origin/HEAD and rebase.
-					cmd := exec.Command("sh", "-c", "git branch -a | grep \"^  remotes/origin/HEAD -> origin/\" | cut -d \"/\" -f 4")
+					cmd := exec.Command("git", "name-rev", "--name-only", "origin/HEAD")
 					// Execute inside the local Git repo.
 					cmd.Dir = local
 					// Setup reading the command output
