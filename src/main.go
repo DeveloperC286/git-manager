@@ -65,15 +65,26 @@ func main() {
 			go func(remote string, local string, statusChannel chan struct{}) {
 				if !exists(local) {
 					// Does not exist locally so just clone from remote.
-					err := exec.Command("git", "clone", remote, local).Run()
+					cmd := exec.Command("git", "clone", remote, local)
+					// Setup reading the command output
+					stderr := new(bytes.Buffer)
+					cmd.Stderr = stderr
+
+					err = cmd.Run()
 
 					if err != nil {
-						log.Error(err)
+						log.WithFields(log.Fields{
+							"remote": remote,
+							"local":  local,
+						}).WithError(err).Error(stderr.String())
 						statusChannel <- struct{}{}
 						return
 					}
 
-					log.Info("Cloned " + remote + " to " + local)
+					log.WithFields(log.Fields{
+						"remote": remote,
+						"local":  local,
+					}).Info("Successfully cloned to local location from remote repository.")
 				} else {
 					// Exists locally so just pull from origin/HEAD and rebase.
 					cmd := exec.Command("sh", "-c", "git branch -a | grep \"^  remotes/origin/HEAD -> origin/\" | cut -d \"/\" -f 4")
@@ -88,7 +99,10 @@ func main() {
 					err = cmd.Run()
 
 					if err != nil {
-						log.WithError(err).Error(stderr.String())
+						log.WithFields(log.Fields{
+							"remote": remote,
+							"local":  local,
+						}).WithError(err).Error(stderr.String())
 						statusChannel <- struct{}{}
 						return
 					}
@@ -108,7 +122,10 @@ func main() {
 					err = cmd.Run()
 
 					if err != nil {
-						log.WithError(err).Error(stderr.String())
+						log.WithFields(log.Fields{
+							"remote": remote,
+							"local":  local,
+						}).WithError(err).Error(stderr.String())
 						statusChannel <- struct{}{}
 						return
 					}
@@ -126,11 +143,18 @@ func main() {
 						err = cmd.Run()
 
 						if err != nil {
-							log.WithError(err).Error(stderr.String())
+							log.WithFields(log.Fields{
+								"remote": remote,
+								"local":  local,
+							}).WithError(err).Error(stderr.String())
 							statusChannel <- struct{}{}
 							return
 						}
 
+						log.WithFields(log.Fields{
+							"remote": remote,
+							"local":  local,
+						}).Info("Updated local head branch from remote head branch.")
 					}
 				}
 
