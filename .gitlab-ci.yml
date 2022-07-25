@@ -111,7 +111,7 @@ compiling:
     - go build -o main "./src/"
   rules:
     - if: $CI_MERGE_REQUEST_ID
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
 releasing:
@@ -142,7 +142,7 @@ releasing:
       --assets-link '{"name":"linux-amd64-binary.zip","url":"https://gitlab.com/DeveloperC/git-manager/-/jobs/artifacts/'${new_tag}'/download?job=release-binary-compiling-linux-amd64"}'
       --assets-link '{"name":"darwin-amd64-binary.zip","url":"https://gitlab.com/DeveloperC/git-manager/-/jobs/artifacts/'${new_tag}'/download?job=release-binary-compiling-darwin-amd64"}'
   rules:
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
 release-binary-compiling-linux-amd64:
