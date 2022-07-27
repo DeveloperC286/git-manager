@@ -57,6 +57,18 @@ conventional-commits-next-version-checking:
     - if: $CI_MERGE_REQUEST_ID
 
 
+version-badge-checking:
+  stage: conventional-commits-next-version-checking
+  image: alpine
+  script:
+    # Get current version.
+    - current_version=$(cat "VERSION")
+    # Check README version badge and version match.
+    - grep -q "(https://img.shields.io/badge/Version-${current_version}-blue)]" "README.md"
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+
+
 formatting:
   stage: formatting
   image: golang
@@ -86,18 +98,6 @@ module-tidying:
     - cp "go.mod" "go.mod.copy"
     - go mod tidy
     - cmp "go.mod" "go.mod.copy" || ( echo "Modules need tidied." && exit 1 )
-  rules:
-    - if: $CI_MERGE_REQUEST_ID
-
-
-version-badge-checking:
-  stage: version-badge-checking
-  image: alpine
-  script:
-    # Get current version.
-    - current_version=$(cat "VERSION")
-    # Check README version badge and version match.
-    - grep -q "(https://img.shields.io/badge/Version-${current_version}-blue)]" "README.md"
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
