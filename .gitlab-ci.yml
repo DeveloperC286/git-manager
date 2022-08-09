@@ -5,7 +5,6 @@ stages:
   - formatting
   - linting
   - module-tidying
-  - version-badge-checking
   - compiling
   - releasing
   - release-binary-compiling
@@ -53,18 +52,6 @@ conventional-commits-next-version-checking:
     - latest_tag=$(git tag --sort=-committerdate | head -1)
     # Check current vs expected.
     - /usr/local/cargo/bin/conventional_commits_next_version --calculation-mode "Batch" --from-reference "${latest_tag}" --from-version "${latest_tag}" --current-version "${current_version}"
-  rules:
-    - if: $CI_MERGE_REQUEST_ID
-
-
-version-badge-checking:
-  stage: conventional-commits-next-version-checking
-  image: alpine
-  script:
-    # Get current version.
-    - current_version=$(cat "VERSION")
-    # Check README version badge and version match.
-    - grep -q "(https://img.shields.io/badge/Version-${current_version}-blue)]" "README.md"
   rules:
     - if: $CI_MERGE_REQUEST_ID
 
