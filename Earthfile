@@ -31,10 +31,15 @@ conventional-commits-next-version-checking:
     RUN ./ci/conventional-commits-next-version-checking.sh
 
 
-COPY_SOURCECODE:
+INSTALL_DEPENDENCIES:
     COMMAND
     COPY "go.mod" "go.mod"
     COPY "go.sum" "go.sum"
+    RUN go mod download
+
+
+COPY_SOURCECODE:
+    COMMAND
     COPY "./ci" "./ci"
     COPY "./src" "./src"
 
@@ -56,12 +61,14 @@ golang-base:
 
 check-formatting:
     FROM +golang-base
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/check-formatting.sh
 
 
 fix-formatting:
     FROM +golang-base
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/fix-formatting.sh
     SAVE ARTIFACT "./src" AS LOCAL "./src"
@@ -70,18 +77,21 @@ fix-formatting:
 linting:
     FROM +golang-base
     RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.2
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/linting.sh
 
 
 check-module-tidying:
     FROM +golang-base
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/check-module-tidying.sh
 
 
 fix-module-tidying:
     FROM +golang-base
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/fix-module-tidying.sh
     SAVE ARTIFACT "go.mod" AS LOCAL "go.mod"
@@ -89,6 +99,7 @@ fix-module-tidying:
 
 compiling-linux-amd64:
     FROM +golang-base
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/compiling.sh
     DO +SAVE_OUTPUT
@@ -97,6 +108,7 @@ compiling-linux-amd64:
 compiling-darwin-amd64:
     FROM +golang-base
     ENV GOOS=darwin
+    DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/compiling.sh
     DO +SAVE_OUTPUT
@@ -104,11 +116,11 @@ compiling-darwin-amd64:
 
 releasing:
     FROM rust
-	# Install release description generator.
-	RUN cargo install git-cliff
-	# Install GitlabCI cli releasing tool.
-	RUN curl --location --output /usr/local/bin/release-cli "https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-linux-amd64"
-	RUN chmod +x /usr/local/bin/release-cli
+    # Install release description generator.
+    RUN cargo install git-cliff
+    # Install GitlabCI cli releasing tool.
+    RUN curl --location --output /usr/local/bin/release-cli "https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-linux-amd64"
+    RUN chmod +x /usr/local/bin/release-cli
     DO +COPY_METADATA
     ARG server_url
     ARG job_token
