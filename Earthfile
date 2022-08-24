@@ -112,18 +112,3 @@ compiling-darwin-amd64:
     DO +COPY_SOURCECODE
     RUN ./ci/compiling.sh
     DO +SAVE_OUTPUT
-
-
-releasing:
-    FROM rust
-    # Install release description generator.
-    RUN cargo install git-cliff
-    # Install GitlabCI cli releasing tool.
-    RUN curl --location --output /usr/local/bin/release-cli "https://release-cli-downloads.s3.amazonaws.com/latest/release-cli-linux-amd64"
-    RUN chmod +x /usr/local/bin/release-cli
-    DO +COPY_METADATA
-    ARG server_url
-    ARG job_token
-    ARG project_id
-    ARG reference
-    RUN ./ci/releasing.sh "${server_url}" "${job_token}" "${project_id}" "${reference}"

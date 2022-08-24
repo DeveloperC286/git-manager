@@ -6,7 +6,6 @@ stages:
   - linting
   - module-tidying
   - compiling
-  - releasing
   - release-binary-compiling
 
 
@@ -77,14 +76,6 @@ compiling:
     - earthly --ci +compiling-linux-amd64
   rules:
     - if: $CI_MERGE_REQUEST_ID
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-
-releasing:
-  stage: releasing
-  script:
-    - earthly --ci +releasing --server_url "${CI_SERVER_URL}" --job_token "${CI_JOB_TOKEN}" --project_id "${CI_PROJECT_ID}" --reference "${CI_COMMIT_SHA}"
-  rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 
