@@ -15,11 +15,10 @@ services:
 
 variables:
   DOCKER_HOST: tcp://docker:2375
+  EARTHLY_EXEC_CMD: "/bin/sh"
 
 
-image:
-  name: earthly/earthly
-  entrypoint: ["/bin/sh", "-c"]
+image: earthly/earthly:v0.6.22
 
 
 clean-git-history-checking:
