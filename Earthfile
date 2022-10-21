@@ -76,7 +76,7 @@ fix-formatting:
 
 linting:
     FROM +golang-base
-    RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.47.2
+    RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.0
     DO +INSTALL_DEPENDENCIES
     DO +COPY_SOURCECODE
     RUN ./ci/linting.sh
