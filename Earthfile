@@ -51,7 +51,7 @@ SAVE_OUTPUT:
 
 
 golang-base:
-    FROM golang:1.18
+    FROM golang:1.19
     WORKDIR /tmp/git-manager
     ENV GOPROXY=direct
     ENV CGO_ENABLED=0
