@@ -3,4 +3,4 @@
 set -o errexit
 set -o xtrace
 
-gofmt -w -s "./src"
+gofmt -w -s "."

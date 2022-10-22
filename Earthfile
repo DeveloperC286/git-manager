@@ -41,7 +41,7 @@ INSTALL_DEPENDENCIES:
 COPY_SOURCECODE:
     COMMAND
     COPY "./ci" "./ci"
-    COPY "./src" "./src"
+	COPY "./main.go" "./main.go"
 
 
 SAVE_OUTPUT:

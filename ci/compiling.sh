@@ -3,4 +3,4 @@
 set -o errexit
 set -o xtrace
 
-go build -o git-manager "./src/"
+go build -o "git-manager"
