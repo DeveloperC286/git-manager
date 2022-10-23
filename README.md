@@ -6,5 +6,11 @@
 
 A utility for managing all your Git repositories, which clones, synchronises and updates local repositories.
 
+## Installation
+### Go Install
+```
+go install gitlab.com/DeveloperC/git-manager@latest
+```
+
 ## Issues/Feature Requests
 To report an issue or request a new feature use [https://gitlab.com/DeveloperC/git-manager/-/issues](https://gitlab.com/DeveloperC/git-manager/-/issues).
