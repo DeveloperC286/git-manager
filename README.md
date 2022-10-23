@@ -5,3 +5,6 @@
 [![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 A utility for managing all your Git repositories, which clones, synchronises and updates local repositories.
+
+## Issues/Feature Requests
+To report an issue or request a new feature use [https://gitlab.com/DeveloperC/git-manager/-/issues](https://gitlab.com/DeveloperC/git-manager/-/issues).
