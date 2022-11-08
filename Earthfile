@@ -3,8 +3,8 @@ VERSION 0.6
 
 COPY_METADATA:
     COMMAND
-    COPY ".git" ".git"
     COPY "./ci" "./ci"
+    COPY ".git" ".git"
     COPY "./VERSION" "./VERSION"
 
 
