@@ -95,6 +95,7 @@ fix-module-tidying:
     DO +COPY_SOURCECODE
     RUN ./ci/fix-module-tidying.sh
     SAVE ARTIFACT "go.mod" AS LOCAL "go.mod"
+    SAVE ARTIFACT "go.sum" AS LOCAL "go.sum"
 
 
 compiling-linux-amd64:
