@@ -16,7 +16,7 @@ A utility for managing all your Git repositories, which clones, synchronises and
 
 ## Installation
 ### Go Install
-```
+```sh
 go install gitlab.com/DeveloperC/git-manager@latest
 ```
 
