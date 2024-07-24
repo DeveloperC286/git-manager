@@ -22,4 +22,4 @@ go install gitlab.com/DeveloperC/git-manager@latest
 
 
 ## Issues/Feature Requests
-To report an issue or request a new feature use [https://gitlab.com/DeveloperC/git-manager/-/issues](https://gitlab.com/DeveloperC/git-manager/-/issues).
+To report an issue or request a new feature use [https://github.com/DeveloperC286/git-manager/issues](https://github.com/DeveloperC286/git-manager/issues).
